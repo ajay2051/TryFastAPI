@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import FastAPI
 
 app = FastAPI()
@@ -9,10 +11,13 @@ def read_root():
 
 
 @app.get('/greet/{name}/')
-def greet_name(name: str) -> dict:
+def greet_name(age:Optional[int], name: str = 'ajay') -> dict:
     """
     If we remove {name} from @app.get('/greet/{name}') then append url {name} with query params.
+    age is added as query params
+    :param age:
     :param name:
     :return: message
     """
-    return {"message": f"Hello {name}"}
+    return {"message": f"Hello {name}. Age: {age}"}
+
