@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import FastAPI
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -11,7 +12,7 @@ def read_root():
 
 
 @app.get('/greet/{name}/')
-def greet_name(age:Optional[int], name: str = 'ajay') -> dict:
+def greet_name(age: Optional[int], name: str = 'ajay') -> dict:
     """
     If we remove {name} from @app.get('/greet/{name}') then append url {name} with query params.
     age is added as query params
@@ -21,3 +22,15 @@ def greet_name(age:Optional[int], name: str = 'ajay') -> dict:
     """
     return {"message": f"Hello {name}. Age: {age}"}
 
+
+class BookCreateModel(BaseModel):
+    title: str
+    author: str
+
+
+@app.post('/create_book')
+async def create_book(book_data: BookCreateModel):
+    return {
+        "title": book_data.title,
+        "author": book_data.author,
+    }
