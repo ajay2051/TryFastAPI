@@ -28,12 +28,12 @@ class BookCreateModel(BaseModel):
     author: str
 
 
-@app.post('/create_book')
-async def create_book(book_data: BookCreateModel):
-    return {
-        "title": book_data.title,
-        "author": book_data.author,
-    }
+# @app.post('/create_book')
+# async def create_book(book_data: BookCreateModel):
+#     return {
+#         "title": book_data.title,
+#         "author": book_data.author,
+#     }
 
 
 @app.get('/get_headers', status_code=200)
@@ -58,3 +58,22 @@ async def get_headers(
     request_headers['Host'] = host
     return request_headers
 
+
+@app.get('/get_books', status_code=200)
+async def get_all_books():
+    pass
+
+
+@app.post('create_book', status_code=201)
+async def create_book():
+    pass
+
+
+@app.put('/update_book', status_code=200)
+async def update_book():
+    pass
+
+
+@app.delete('/delete_book', status_code=200)
+async def delete_book():
+    pass
