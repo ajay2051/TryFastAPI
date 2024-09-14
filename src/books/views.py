@@ -7,7 +7,6 @@ from src.books import models
 from src.books.schemas import BooksCreate, BooksResponse, BooksUpdate
 
 books_router = APIRouter(
-    prefix="/books",
     tags=['Books']
 )
 

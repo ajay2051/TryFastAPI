@@ -3,10 +3,15 @@ from typing import Optional
 from fastapi import FastAPI, Header
 from pydantic import BaseModel
 
-from src import books
 from src.books.views import books_router
 
-app = FastAPI()
+ver_sion = 'v1'
+
+app = FastAPI(
+    title='Books API',
+    description='Books API',
+    version=ver_sion
+)
 
 
 @app.get("/")
@@ -62,4 +67,4 @@ async def get_headers(
     return request_headers
 
 
-app.include_router(books_router)
+app.include_router(books_router, prefix=f'/api/{ver_sion}/books')
