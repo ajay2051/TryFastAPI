@@ -1,16 +1,27 @@
+from contextlib import asynccontextmanager
 from typing import Optional
 
 from fastapi import FastAPI, Header
 from pydantic import BaseModel
 
+from app.db_connection import startup
 from src.books.views import books_router
+
+
+@asynccontextmanager
+async def life_span(app: FastAPI) -> FastAPI:
+    print("server starting....")
+    await startup()
+    yield
+    print("server stopped....")
 
 ver_sion = 'v1'
 
 app = FastAPI(
     title='Books API',
     description='Books API',
-    version=ver_sion
+    version=ver_sion,
+    lifespan=life_span,
 )
 
 
