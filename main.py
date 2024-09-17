@@ -4,15 +4,16 @@ from typing import Optional
 from fastapi import FastAPI, Header
 from pydantic import BaseModel
 
-from app.db_connection import startup
-from src.books.views import books_router
+from app.books.views import books_router
+from app.db_connection import shutdown, startup
 
 
 @asynccontextmanager
-async def life_span(app: FastAPI) -> FastAPI:
+async def lifespan(app: FastAPI):
     print("server starting....")
     await startup()
     yield
+    await shutdown()
     print("server stopped....")
 
 ver_sion = 'v1'
@@ -21,7 +22,7 @@ app = FastAPI(
     title='Books API',
     description='Books API',
     version=ver_sion,
-    lifespan=life_span,
+    lifespan=lifespan,
 )
 
 

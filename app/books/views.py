@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from starlette import status
 
+from app import models
+from app.books.schemas import BooksCreate, BooksResponse, BooksUpdate
 from app.db_connection import get_db
-from src.books import models
-from src.books.schemas import BooksCreate, BooksResponse, BooksUpdate
 
 books_router = APIRouter(
     tags=['Books']
@@ -26,7 +26,7 @@ async def get_all_books(db: Session = Depends(get_db)):
     return all_books
 
 
-@books_router.get('/get_single_book/{book_id}/', status_code=status.HTTP_200_OK)
+@books_router.get('/get_single_book/{book_id}/', status_code=status.HTTP_200_OK, response_model=BooksUpdate)
 def get_single_book(book_id: int, db: Session = Depends(get_db)):
     book = db.query(models.Books).filter(models.Books.id == book_id).first()
     if not book:
@@ -34,7 +34,7 @@ def get_single_book(book_id: int, db: Session = Depends(get_db)):
     return book
 
 
-@books_router.patch('/update_book/{book_id}/', status_code=status.HTTP_200_OK)
+@books_router.patch('/update_book/{book_id}/', status_code=status.HTTP_200_OK, response_model=BooksUpdate)
 async def update_book(book_id: int, book_update: BooksUpdate, db: Session = Depends(get_db)):
     book = db.query(models.Books).filter(models.Books.id == book_id).first()
     if not book:
