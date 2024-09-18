@@ -14,7 +14,7 @@ DEV_DATABASE_URL = DATABASE_URL = f"postgresql://{settings.database_username}:{s
                f":{settings.database_port}/{settings.database_name}"
 engine = create_engine(DEV_DATABASE_URL)
 Base = declarative_base()
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=True)
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=True)  # dependency injection
 
 
 async def get_db():

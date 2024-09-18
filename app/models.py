@@ -1,4 +1,4 @@
-from sqlalchemy import TIMESTAMP, Column, Integer, String
+from sqlalchemy import TIMESTAMP, Boolean, Column, Integer, String
 
 from .db_connection import Base
 
@@ -20,3 +20,16 @@ class Books(Base):
     language = Column(String)
     created_at = Column(TIMESTAMP)
     updated_at = Column(TIMESTAMP)
+
+    def __repr__(self):
+        return f"{self.title} {self.author} {self.publisher} {self.published_date} {self.page_count} {self.language}"
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    is_active = Column(Boolean, default=True)
