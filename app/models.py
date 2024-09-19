@@ -1,6 +1,13 @@
-from sqlalchemy import TIMESTAMP, Boolean, Column, Integer, String
+import enum
+
+from sqlalchemy import TIMESTAMP, Boolean, Column, Integer, String, Enum
 
 from .db_connection import Base
+
+
+class UserRole(enum.Enum):
+    USER = "user"
+    ADMIN = "admin"
 
 
 class Category(Base):
@@ -33,3 +40,4 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
+    role = Column(Enum(UserRole), default=UserRole.USER)

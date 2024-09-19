@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app import models
 from app.auth import schemas
 from app.db_connection import get_db
+from app.models import UserRole
 
 # to get a string like this run:
 # openssl rand -hex 32
@@ -73,4 +74,15 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 async def get_current_active_user(current_user: schemas.User = Depends(get_current_user)):
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+
+
+def is_admin(user: schemas.User):
+    return user.role == UserRole.ADMIN
+
+
+# Add this dependency
+async def get_current_admin_user(current_user: schemas.User = Depends(get_current_active_user)):
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Not enough permissions")
     return current_user
