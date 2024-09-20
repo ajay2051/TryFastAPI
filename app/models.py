@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import TIMESTAMP, Boolean, Column, Integer, String, Enum
+from sqlalchemy import TIMESTAMP, Boolean, Column, Enum, Integer, String
 
 from .db_connection import Base
 
