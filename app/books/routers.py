@@ -28,7 +28,7 @@ async def create_book(book: books.schemas.BooksCreate, db: Session = Depends(get
     return new_book
 
 
-@books_router.get('/get_books/', status_code=200)
+@books_router.get('/get_books/', status_code=200, response_model=BooksResponse)
 async def get_all_books(db: Session = Depends(get_db), current_user: auth.schemas.User = Depends(auth.get_current_active_user)):
     """
     Current Active users can see all books.

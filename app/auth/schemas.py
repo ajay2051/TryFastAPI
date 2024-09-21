@@ -5,6 +5,7 @@ from app.models import UserRole
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str
 
 
@@ -15,10 +16,16 @@ class TokenData(BaseModel):
 class UserBase(BaseModel):
     username: str
     email: str | None = None
-    role: UserRole = UserRole.USER
+    role: str = UserRole.USER.value
 
 
 class UserCreate(UserBase):
+    password: str
+
+
+class AdminUserCreate(BaseModel):
+    username: str
+    email: str | None = None
     password: str
 
 
@@ -27,4 +34,10 @@ class User(UserBase):
     is_active: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str
