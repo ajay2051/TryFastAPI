@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from app import models
-from app.auth import schemas
+from app.auth import get_create_user, schemas
 from app.db_connection import get_db
 from app.models import UserRole
 
@@ -73,6 +73,18 @@ def verify_refresh_token(token: str):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
 
 
+def blacklist_token(db: Session, token: str):
+    db_token = models.BlacklistedToken(token=token)
+    db.add(db_token)
+    db.commit()
+    db.refresh(db_token)
+    return db_token
+
+
+def is_token_blacklisted(db: Session, token: str) -> bool:
+    return db.query(models.BlacklistedToken).filter(models.BlacklistedToken.token == token).first() is not None
+
+
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -87,7 +99,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         token_data = schemas.TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = db.query(models.User).filter(models.User.username == token_data.username).first()
+
+    if is_token_blacklisted(db, token):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been blacklisted")
+
+    user = get_create_user.get_user_by_username(db, username=token_data.username)
     if user is None:
         raise credentials_exception
     return user

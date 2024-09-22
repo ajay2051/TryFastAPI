@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from starlette import status
 
 from app.auth import auth, get_create_user, schemas
+from app.auth.auth import blacklist_token
 from app.db_connection import get_db
 from app.models import UserRole
 
@@ -94,3 +95,9 @@ async def read_users_me(current_user: schemas.User = Depends(auth.get_current_ac
     :return: current user
     """
     return current_user
+
+
+@auth_router.post("/logout")
+async def logout(current_user: auth.schemas.User = Depends(auth.get_current_user), token: str = Depends(auth.oauth2_scheme), db: Session = Depends(get_db)):
+    blacklist_token(db, token)
+    return {"message": "Successfully logged out"}

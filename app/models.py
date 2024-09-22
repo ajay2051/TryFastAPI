@@ -1,6 +1,7 @@
+import datetime
 import enum
 
-from sqlalchemy import TIMESTAMP, Boolean, Column, Enum, Integer, String
+from sqlalchemy import TIMESTAMP, Boolean, Column, DateTime, Integer, String
 
 from .db_connection import Base
 
@@ -41,3 +42,11 @@ class User(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     role = Column(String, default=UserRole.USER.value)
+
+
+class BlacklistedToken(Base):
+    __tablename__ = "blacklisted_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    token = Column(String, unique=True, index=True)
+    blacklisted_on = Column(DateTime, default=datetime.datetime.utcnow)

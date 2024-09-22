@@ -3,7 +3,6 @@ from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI, Header
-from pydantic import BaseModel
 
 from app.auth.routers import auth_router
 from app.books.routers import books_router
@@ -17,6 +16,7 @@ async def lifespan(app: FastAPI):
     yield
     await shutdown()
     print("server stopped....")
+
 
 ver_sion = 'v1'
 
@@ -43,19 +43,6 @@ def greet_name(age: Optional[int], name: str = 'ajay') -> dict:
     :return: message
     """
     return {"message": f"Hello {name}. Age: {age}"}
-
-
-class BookCreateModel(BaseModel):
-    title: str
-    author: str
-
-
-# @app.post('/create_book')
-# async def create_book(book_data: BookCreateModel):
-#     return {
-#         "title": book_data.title,
-#         "author": book_data.author,
-#     }
 
 
 @app.get('/get_headers', status_code=200)
