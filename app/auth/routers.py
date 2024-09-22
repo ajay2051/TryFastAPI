@@ -7,6 +7,7 @@ from starlette import status
 
 from app.auth import auth, get_create_user, schemas
 from app.auth.auth import blacklist_token
+from app.auth.dependencies import RoleChecker
 from app.db_connection import get_db
 from app.models import UserRole
 
@@ -88,16 +89,18 @@ def create_admin_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 
 @auth_router.get("/users/me/", response_model=schemas.User)
-async def read_users_me(current_user: schemas.User = Depends(auth.get_current_active_user)):
+async def read_users_me(current_user: schemas.User = Depends(auth.get_current_active_user), _: bool = Depends(RoleChecker(['admin']))):
     """
     Current Active Logged-In Users
-    :param current_user:
+    :param _: Checks Role for current user
+    :param current_user: Currently logged-in user
     :return: current user
     """
     return current_user
 
 
 @auth_router.post("/logout")
-async def logout(current_user: auth.schemas.User = Depends(auth.get_current_user), token: str = Depends(auth.oauth2_scheme), db: Session = Depends(get_db)):
+async def logout(current_user: auth.schemas.User = Depends(auth.get_current_user), token: str = Depends(auth.oauth2_scheme),
+                 db: Session = Depends(get_db)):
     blacklist_token(db, token)
     return {"message": "Successfully logged out"}
