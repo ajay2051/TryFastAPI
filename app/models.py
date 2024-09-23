@@ -1,7 +1,8 @@
 import datetime
 import enum
 
-from sqlalchemy import TIMESTAMP, Boolean, Column, DateTime, Integer, String
+from sqlalchemy import TIMESTAMP, Boolean, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
 
 from .db_connection import Base
 
@@ -28,6 +29,8 @@ class Books(Base):
     language = Column(String)
     created_at = Column(TIMESTAMP)
     updated_at = Column(TIMESTAMP)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship("User", back_populates="books")
 
     def __repr__(self):
         return f"{self.title} {self.author} {self.publisher} {self.published_date} {self.page_count} {self.language}"
@@ -42,6 +45,7 @@ class User(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     role = Column(String, default=UserRole.USER.value)
+    books = relationship("Books", back_populates="user")
 
 
 class BlacklistedToken(Base):
