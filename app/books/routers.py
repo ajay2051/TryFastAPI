@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from starlette import status
 
 from app import books, models
@@ -21,14 +21,14 @@ async def create_book(book: books.schemas.BooksCreate, db: Session = Depends(get
     :param current_user:
     :return: new_book
     """
-    new_book = models.Books(**book.__dict__)
+    new_book = models.Books(**book.__dict__, user_id=current_user.id)
     db.add(new_book)
     db.commit()
     db.refresh(new_book)
     return new_book
 
 
-@books_router.get('/get_books/', status_code=200, response_model=BooksResponse)
+@books_router.get('/get_books/', status_code=200, response_model=list[BooksResponse])
 async def get_all_books(db: Session = Depends(get_db), current_user: auth.schemas.User = Depends(auth.get_current_active_user)):
     """
     Current Active users can see all books.
@@ -36,11 +36,11 @@ async def get_all_books(db: Session = Depends(get_db), current_user: auth.schema
     :param current_user:
     :return: all_books
     """
-    all_books = db.query(models.Books).all()
+    all_books = db.query(models.Books).options(joinedload(models.Books.user)).all()
     return all_books
 
 
-@books_router.get('/get_single_book/{book_id}/', status_code=status.HTTP_200_OK, response_model=BooksUpdate)
+@books_router.get('/get_single_book/{book_id}/', status_code=status.HTTP_200_OK, response_model=BooksResponse)
 def get_single_book(book_id: int, db: Session = Depends(get_db), current_user: auth.schemas.User = Depends(auth.get_current_active_user)):
     """
     Current Active users can see a single book.
@@ -49,13 +49,13 @@ def get_single_book(book_id: int, db: Session = Depends(get_db), current_user: a
     :param current_user:
     :return: single_book
     """
-    book = db.query(models.Books).filter(models.Books.id == book_id).first()
+    book = db.query(models.Books).options(joinedload(models.Books.user)).filter(models.Books.id == book_id).first()
     if not book:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Book with id {book_id} not found")
     return book
 
 
-@books_router.patch('/update_book/{book_id}/', status_code=status.HTTP_200_OK, response_model=BooksUpdate)
+@books_router.patch('/update_book/{book_id}/', status_code=status.HTTP_200_OK, response_model=BooksResponse)
 async def update_book(book_id: int, book_update: BooksUpdate, db: Session = Depends(get_db), current_user: auth.schemas.User = Depends(auth.get_current_admin_user)):
     """
     Admin users can update books.
