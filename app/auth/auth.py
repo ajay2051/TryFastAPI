@@ -34,8 +34,8 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def authenticate_user(db: Session, username: str, password: str):
-    user = db.query(models.User).filter(models.User.username == username).first()
+def authenticate_user(db: Session, email: str, password: str):
+    user = db.query(models.User).filter(models.User.email == email).first()
     if not user or not verify_password(password, user.hashed_password):
         return False
     return user
@@ -63,11 +63,11 @@ def create_refresh_token(data: dict):
 def verify_refresh_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
+        email: str = payload.get("sub")
         token_type: str = payload.get("type")
-        if username is None or token_type != "refresh":
+        if email is None or token_type != "refresh":
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
-        token_data = schemas.TokenData(username=username)
+        token_data = schemas.TokenData(email=email)
         return token_data
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
@@ -85,6 +85,10 @@ def is_token_blacklisted(db: Session, token: str) -> bool:
     return db.query(models.BlacklistedToken).filter(models.BlacklistedToken.token == token).first() is not None
 
 
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.User).filter(models.User.email == email).first()
+
+
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -93,17 +97,17 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        email: str = payload.get("sub")
+        if email is None:
             raise credentials_exception
-        token_data = schemas.TokenData(username=username)
+        token_data = schemas.TokenData(email=email)
     except JWTError:
         raise credentials_exception
 
     if is_token_blacklisted(db, token):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been blacklisted")
 
-    user = get_create_user.get_user_by_username(db, username=token_data.username)
+    user = get_user_by_email(db, email=token_data.email)
     if user is None:
         raise credentials_exception
     return user

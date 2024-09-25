@@ -1,7 +1,7 @@
 import datetime
 import enum
 
-from sqlalchemy import TIMESTAMP, Boolean, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import TIMESTAMP, Boolean, Column, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import relationship
 
 from .db_connection import Base
@@ -27,8 +27,8 @@ class Books(Base):
     published_date = Column(String)
     page_count = Column(Integer)
     language = Column(String)
-    created_at = Column(TIMESTAMP)
-    updated_at = Column(TIMESTAMP)
+    created_at = Column(TIMESTAMP, default=func.now(), nullable=False)
+    updated_at = Column(TIMESTAMP, default=func.now(), onupdate=func.now(), nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship("User", back_populates="books")
 

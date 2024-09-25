@@ -10,7 +10,7 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    username: str | None = None
+    email: str | None = None
 
 
 class UserBase(BaseModel):
@@ -41,3 +41,8 @@ class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+
+
+class LoginData(BaseModel):
+    email: str
+    password: str

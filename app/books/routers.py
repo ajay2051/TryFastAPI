@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session, joinedload
 from starlette import status
 
 from app import books, models
-from app.auth import auth
+from app.auth import auth, schemas
+from app.auth.dependencies import RoleChecker
 from app.books.schemas import BooksResponse, BooksUpdate
 from app.db_connection import get_db
 
@@ -13,9 +14,11 @@ books_router = APIRouter(
 
 
 @books_router.post('/create_book/', response_model=BooksResponse, status_code=status.HTTP_201_CREATED)
-async def create_book(book: books.schemas.BooksCreate, db: Session = Depends(get_db), current_user: auth.schemas.User = Depends(auth.get_current_admin_user)):
+async def create_book(book: books.schemas.BooksCreate, db: Session = Depends(get_db),
+                      current_user: schemas.User = Depends(auth.get_current_active_user), _: bool = Depends(RoleChecker(['admin']))):
     """
     Books can be created by only admin users.
+    :param _:
     :param book:
     :param db:
     :param current_user:
@@ -37,6 +40,8 @@ async def get_all_books(db: Session = Depends(get_db), current_user: auth.schema
     :return: all_books
     """
     all_books = db.query(models.Books).options(joinedload(models.Books.user)).all()
+    if not all_books:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='No books found.')
     return all_books
 
 

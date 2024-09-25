@@ -8,6 +8,7 @@ from starlette import status
 from app.auth import auth, get_create_user, schemas
 from app.auth.auth import blacklist_token
 from app.auth.dependencies import RoleChecker
+from app.auth.schemas import LoginData
 from app.db_connection import get_db
 from app.models import UserRole
 
@@ -17,14 +18,14 @@ auth_router = APIRouter(
 
 
 @auth_router.post("/token/", response_model=schemas.Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+async def login_for_access_token(form_data: LoginData, db: Session = Depends(get_db)):
     """
     It generates access token, refresh token after login
     :param form_data:
     :param db:
     :return: access_token, refresh_token, token_type
     """
-    user = auth.authenticate_user(db, form_data.username, form_data.password)
+    user = auth.authenticate_user(db, form_data.email, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -33,9 +34,9 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         )
     access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth.create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user.email}, expires_delta=access_token_expires
     )
-    refresh_token = auth.create_refresh_token(data={"sub": user.username})
+    refresh_token = auth.create_refresh_token(data={"sub": user.email})
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 
