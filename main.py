@@ -3,6 +3,7 @@ from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI, Header
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth.routers import auth_router
 from app.books.routers import books_router
@@ -25,6 +26,19 @@ app = FastAPI(
     description='Books API',
     version=ver_sion,
     lifespan=lifespan,
+)
+
+origins = [
+    "http://localhost:8000",
+    "http://localhost:8080",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
