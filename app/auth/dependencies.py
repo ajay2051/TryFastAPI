@@ -7,6 +7,9 @@ from app.models import User
 
 
 class RoleChecker:
+    """
+    Checks the roles of users.
+    """
     def __init__(self, allowed_roles: List[str]):
         self.allowed_roles = allowed_roles
 
