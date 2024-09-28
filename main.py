@@ -2,12 +2,14 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 import uvicorn
-from fastapi import FastAPI, Header
+from fastapi import FastAPI, Header, status
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import JSONResponse
 
 from app.auth.routers import auth_router
 from app.books.routers import books_router
 from app.db_connection import shutdown, startup
+from app.custom_exception import InvalidToken, create_exception_handler, InsufficientPermission
 
 
 @asynccontextmanager
@@ -40,6 +42,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(500)
+async def server_error(app: FastAPI, exception):
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={'message': "OOps something went wrong."},
+    )
+
+
+app.add_exception_handler(InvalidToken, create_exception_handler(status_code=status.HTTP_401_UNAUTHORIZED, message={"message": "Invalid Token"}))
+app.add_exception_handler(InsufficientPermission,
+                          create_exception_handler(status_code=status.HTTP_403_FORBIDDEN, message={"message": "Not enough permissions"}))
 
 
 @app.get("/")
