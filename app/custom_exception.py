@@ -1,4 +1,5 @@
 from typing import Any, Callable
+
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 

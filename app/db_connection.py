@@ -9,6 +9,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from app import models
 # from app.auth.auth import clean_blacklisted_tokens
 from config import settings
+from main import init_redis_cache
 
 app = FastAPI()
 
@@ -37,6 +38,7 @@ async def get_db():
 
 @app.on_event("startup")
 async def startup():
+    init_redis_cache(app)
     app.db_connection = psycopg2.connect(DEV_DATABASE_URL)
 
     async def clean_tokens(days: int = 7):

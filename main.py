@@ -1,16 +1,31 @@
+import os
 from contextlib import asynccontextmanager
 from typing import Optional
 
 import uvicorn
-from fastapi import FastAPI, Header, status
+from fastapi import FastAPI, Header, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_redis_cache import FastApiRedisCache
+from redis import Redis
+from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 
 from app.auth.routers import auth_router
 from app.books.routers import books_router
+from app.custom_exception import InsufficientPermission, InvalidToken, create_exception_handler
 from app.db_connection import shutdown, startup
-from app.custom_exception import InvalidToken, create_exception_handler, InsufficientPermission
 
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379")
+
+redis_client = Redis.from_url(REDIS_URL, decode_responses=True)
+
+def init_redis_cache(app):
+    FastApiRedisCache().init(
+        host_url=REDIS_URL,
+        prefix="myapi-cache",
+        response_header="X-MyAPI-Cache",
+        ignore_arg_types=[Request, Response, Session]
+    )
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
