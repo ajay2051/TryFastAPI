@@ -59,6 +59,19 @@ app.add_middleware(
 )
 
 
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    print(f"Incoming request: {request.method} {request.url}")
+
+    response = await call_next(request)
+
+    print(f"Outgoing response: {response.status_code}")
+
+    response.headers["X-Process-Time"] = "0.1"  # Example custom header
+
+    return response
+
+
 @app.exception_handler(500)
 async def server_error(app: FastAPI, exception):
     return JSONResponse(
