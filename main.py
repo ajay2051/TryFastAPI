@@ -3,21 +3,22 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 import uvicorn
-from fastapi import FastAPI, Header, Request, Response, status
+from fastapi import FastAPI, Header, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_redis_cache import FastApiRedisCache
 from redis import Redis
 from sqlalchemy.orm import Session
-from starlette.responses import JSONResponse
 
 from app.auth.routers import auth_router
 from app.books.routers import books_router
-from app.custom_exception import InsufficientPermission, InvalidToken, create_exception_handler
+from app.custom_exception import register_all_errors
 from app.db_connection import shutdown, startup
+from app.middleware import register_middleware
 
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379")
 
 redis_client = Redis.from_url(REDIS_URL, decode_responses=True)
+
 
 def init_redis_cache(app):
     FastApiRedisCache().init(
@@ -26,6 +27,7 @@ def init_redis_cache(app):
         response_header="X-MyAPI-Cache",
         ignore_arg_types=[Request, Response, Session]
     )
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -58,37 +60,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    """
-    Middleware
-    :param request:
-    :param call_next:
-    :return:
-    """
-    print(f"Incoming request: {request.method} {request.url}")
-
-    response = await call_next(request)
-
-    print(f"Outgoing response: {response.status_code}")
-
-    response.headers["X-Process-Time"] = "0.1"  # Example custom header
-
-    return response
+# process_time(app)
+register_all_errors(app)  # Register All Errors from custom_exception file in main file
+register_middleware(app)  # Register All Middleware from middlewares file in main file
 
 
-@app.exception_handler(500)
-async def server_error(app: FastAPI, exception):
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={'message': "OOps something went wrong."},
-    )
-
-
-app.add_exception_handler(InvalidToken, create_exception_handler(status_code=status.HTTP_401_UNAUTHORIZED, message={"message": "Invalid Token"}))
-app.add_exception_handler(InsufficientPermission,
-                          create_exception_handler(status_code=status.HTTP_403_FORBIDDEN, message={"message": "Not enough permissions"}))
+# app.add_exception_handler(InvalidToken, create_exception_handler(status_code=status.HTTP_401_UNAUTHORIZED, message={"message": "Invalid Token"}))
+# app.add_exception_handler(InsufficientPermission,
+#                           create_exception_handler(status_code=status.HTTP_403_FORBIDDEN, message={"message": "Not enough permissions"}))
 
 
 @app.get("/")
