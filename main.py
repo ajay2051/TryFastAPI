@@ -20,15 +20,6 @@ REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379")
 redis_client = Redis.from_url(REDIS_URL, decode_responses=True)
 
 
-def init_redis_cache(app):
-    FastApiRedisCache().init(
-        host_url=REDIS_URL,
-        prefix="myapi-cache",
-        response_header="X-MyAPI-Cache",
-        ignore_arg_types=[Request, Response, Session]
-    )
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("server starting....")

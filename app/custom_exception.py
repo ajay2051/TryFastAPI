@@ -5,7 +5,7 @@ from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
-from main import app
+app = FastAPI()
 
 
 class BaseError(Exception):

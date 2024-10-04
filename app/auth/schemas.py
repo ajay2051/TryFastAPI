@@ -1,4 +1,7 @@
+from typing import List
+
 from pydantic import BaseModel
+from pydantic_core.core_schema import ListSchema
 
 from app.models import UserRole
 
@@ -46,3 +49,7 @@ class TokenResponse(BaseModel):
 class LoginData(BaseModel):
     email: str
     password: str
+
+
+class EmailSchema(BaseModel):
+    addresses: List[str]

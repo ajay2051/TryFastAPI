@@ -3,17 +3,32 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from starlette import status
+from fastapi.responses import JSONResponse
 
 from app.auth import auth, get_create_user, schemas
 from app.auth.auth import blacklist_token
 from app.auth.dependencies import RoleChecker
-from app.auth.schemas import LoginData
+from app.auth.schemas import LoginData, EmailSchema
 from app.db_connection import get_db
+from app.mail import create_message, mail
 from app.models import UserRole
 
 auth_router = APIRouter(
     tags=['auth']
 )
+
+
+@auth_router.post('/send_email')
+async def send_email(email: EmailSchema):
+    emails = email.addresses
+    html = "<h1>Welcome</h1>"
+    message = create_message(
+        recipients=emails,
+        subject='Welcome to Nepal',
+        body=html,
+    )
+    await mail.send_message(message)
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Email has been sent"})
 
 
 @auth_router.post("/token/", response_model=schemas.Token)
