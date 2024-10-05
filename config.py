@@ -10,17 +10,17 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str
     access_token_expire_minutes: int
-    MAIL_USERNAME : str
-    MAIL_PASSWORD : str
-    MAIL_FROM : str
-    MAIL_FROM_NAME : str
-    MAIL_PORT : int
-    MAIL_SERVER : str
-    MAIL_STARTTLS : bool
-    MAIL_SSL_TLS : bool
-    USE_CREDENTIALS : bool
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_FROM: str
+    MAIL_FROM_NAME: str
+    MAIL_PORT: int
+    MAIL_SERVER: str
+    MAIL_STARTTLS: bool
+    MAIL_SSL_TLS: bool
+    USE_CREDENTIALS: bool
     VALIDATE_CERTS: bool
-    TEMPLATE_FOLDER:str
+    TEMPLATE_FOLDER: str
 
     class Config:
         env_file = ".env"

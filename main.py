@@ -3,11 +3,9 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 import uvicorn
-from fastapi import FastAPI, Header, Request, Response
+from fastapi import FastAPI, Header
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi_redis_cache import FastApiRedisCache
 from redis import Redis
-from sqlalchemy.orm import Session
 
 from app.auth.routers import auth_router
 from app.books.routers import books_router

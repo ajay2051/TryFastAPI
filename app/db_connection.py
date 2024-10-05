@@ -3,12 +3,11 @@ from datetime import datetime, timedelta
 
 import psycopg2
 from dotenv import load_dotenv
-from fastapi import BackgroundTasks, FastAPI
-from fastapi import Request, Response
+from fastapi import BackgroundTasks, FastAPI, Request, Response
 from fastapi_redis_cache import FastApiRedisCache
 from redis import Redis
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from app import models
 # from app.auth.auth import clean_blacklisted_tokens
