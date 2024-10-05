@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -6,11 +7,11 @@ from sqlalchemy.orm import Session
 from starlette import status
 
 from app.auth import auth, get_create_user, schemas
-from app.auth.auth import blacklist_token
+from app.auth.auth import blacklist_token, create_url_safe_token, decode_urlsafe_token
 from app.auth.dependencies import RoleChecker
 from app.auth.schemas import EmailSchema, LoginData
 from app.db_connection import get_db
-from app.mail import send_email_async
+from app.mail import send_email_async, mail
 from app.models import UserRole
 
 auth_router = APIRouter(
@@ -31,7 +32,7 @@ auth_router = APIRouter(
 #     return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Email has been sent"})
 
 
-@auth_router.post('/send_email')
+@auth_router.post('/send_email/')
 async def send_email(email: EmailSchema, background_tasks: BackgroundTasks):
     background_tasks.add_task(send_email_async, email.addresses, "Welcome to Nepal")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Email sending has been scheduled"})
@@ -69,7 +70,7 @@ async def refresh_access_token(refresh_token: str, db: Session = Depends(get_db)
     :return: new access token, refresh_token, token_type
     """
     token_data = auth.verify_refresh_token(refresh_token)
-    user = get_create_user.get_user_by_username(db, username=token_data.username)
+    user = get_create_user.get_user_by_email(db, email=token_data.email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -80,18 +81,37 @@ async def refresh_access_token(refresh_token: str, db: Session = Depends(get_db)
     return {"access_token": access_token, "refresh_token": new_refresh_token, "token_type": "bearer"}
 
 
-@auth_router.post("/create_users/", response_model=schemas.User)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+@auth_router.post("/create_users/",
+                  # response_model=schemas.User # commented because response format is changed to custom dict
+                  )
+async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """
     Create Users with any roles.
     :param user:
     :param db:
     :return: user
     """
-    db_user = get_create_user.get_user_by_username(db, username=user.username)
+    db_user = get_create_user.get_user_by_email(db, email=user.email)
     if db_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
-    return get_create_user.create_user(db=db, user=user)
+        raise HTTPException(status_code=400, detail="User already exists")
+    new_user = get_create_user.create_user(db=db, user=user)
+    domain = os.environ.get('DOMAIN')
+    token = create_url_safe_token({"email": user.email})
+    link = f"https://{domain}/api/v1/auth/verify/{token}"
+    html_message = f"""
+    <h1>Verify your Email</h1>
+    <p>Please click this <a href="{link}">link</a> to verify your email</p>
+    """
+    message = send_email_async(
+        addresses=[user.email],
+        subject="Verify Account",
+        body=html_message,
+    )
+    await mail.send_message(message)
+    return {
+        "message": "Account Created! Check Email",
+        "user": new_user
+    }
 
 
 @auth_router.post('create_admin_users/', response_model=schemas.User)
@@ -102,9 +122,9 @@ def create_admin_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     :param db:
     :return: admin users.
     """
-    db_user = get_create_user.get_user_by_username(db, username=user.username)
+    db_user = get_create_user.get_user_by_email(db, email=user.email)
     if db_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
+        raise HTTPException(status_code=400, detail="User already exists")
     user.role = UserRole.ADMIN.value
     return get_create_user.create_user(db=db, user=user)
 

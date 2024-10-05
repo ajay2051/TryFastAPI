@@ -34,20 +34,21 @@ def register_middleware(app: FastAPI):
         processing_time = time.time() - start_time
         print("After", processing_time)
         print(f"Outgoing response: {response.status_code}")
-        message = f"{request.client.host}:{request.client.port} - {request.method} - {request.url.path} {response.status_code} in {processing_time:.2f}"
-        print(f"{message}")
+        message = (f"{request.client.host}:{request.client.port} - {request.method} - {request.url.path} {response.status_code} in"
+                   f" {processing_time:.2f}")
+        print(f"Message {message}")
         response.headers["X-Process-Time"] = str(processing_time)
         response.headers["Incoming request"] = request.method
         response.headers["Incoming URL"] = request.url.path
-        response.headers["Outgoing response"] = response.status_code
+        # response.headers["Outgoing response"] = response.status_code
         return response
 
-    @app.middleware("http")
-    async def authorization(request: Request, call_next):
-        if not "Authorization" in request.headers:
-            return JSONResponse(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                content={"message": "Missing Authorization header"},
-            )
-        response = await call_next(request)
-        return response
+    # @app.middleware("http")
+    # async def authorization(request: Request, call_next):
+    #     if not "Authorization" in request.headers:
+    #         return JSONResponse(
+    #             status_code=status.HTTP_401_UNAUTHORIZED,
+    #             content={"message": "Missing Authorization header"},
+    #         )
+    #     response = await call_next(request)
+    #     return response

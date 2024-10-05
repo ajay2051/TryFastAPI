@@ -41,11 +41,12 @@ mail = FastMail(config=mail_config)
     # await fm.send_message(message)
     # return JSONResponse(status_code=200, content={"message": "email has been sent"})
 
-async def send_email_async(addresses: List[str], subject: str):
+async def send_email_async(addresses: List[str], subject: str, body: str):
     message = MessageSchema(
         subject=subject,
         recipients=addresses,
         template_body={},
+        body=body,
         subtype=MessageType.html
     )
     await mail.send_message(message, template_name="email_template.html")
