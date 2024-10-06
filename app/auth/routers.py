@@ -10,7 +10,7 @@ from app.auth import auth, get_create_user, schemas
 from app.auth.auth import blacklist_token, create_url_safe_token, decode_urlsafe_token
 from app.auth.dependencies import RoleChecker
 from app.auth.get_create_user import get_user_by_email, update_user
-from app.auth.schemas import EmailSchema, LoginData
+from app.auth.schemas import EmailSchema, LoginData, PasswordResetRequestModel
 from app.db_connection import get_db
 from app.mail import send_email_async, mail
 from app.models import UserRole
@@ -154,8 +154,34 @@ async def read_users_me(current_user: schemas.User = Depends(auth.get_current_ac
     return current_user
 
 
-@auth_router.post("/logout")
+@auth_router.post("/logout/")
 async def logout(current_user: auth.schemas.User = Depends(auth.get_current_user), token: str = Depends(auth.oauth2_scheme),
                  db: Session = Depends(get_db)):
     blacklist_token(db, token)
     return {"message": "Successfully logged out"}
+
+
+"""
+1. PROVIDE THE EMAIL  -> PASSWORD RESET REQUEST
+2. SEND PASSWORD REQUEST LINK
+3. RESET PASSWORD -> PASSWORD RESET CONFIRMATION REQUEST
+"""
+
+
+@auth_router.post('/password-reset/')
+async def password_reset(email_data: PasswordResetRequestModel):
+    email = email_data.email
+    domain = os.environ.get('DOMAIN')
+    token = create_url_safe_token({"email": email})
+    link = f"https://{domain}/api/v1/auth/password-reset-confirm/{token}"
+    html_message = f"""
+        <h1>Password Reset</h1>
+        <p>Please click this <a href="{link}">link</a> to verify your email</p>
+        """
+    message = send_email_async(
+        addresses=[email],
+        subject="Reset Password",
+        body=html_message,
+    )
+    await mail.send_message(message)
+    return JSONResponse(content={"message": "Paasword Reset Link Sent, Check Mail"}, status_code=status.HTTP_200_OK)

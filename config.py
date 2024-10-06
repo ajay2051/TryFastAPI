@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     MAIL_SSL_TLS: bool
     USE_CREDENTIALS: bool
     VALIDATE_CERTS: bool
+    DOMAIN: str
     TEMPLATE_FOLDER: str
 
     class Config:

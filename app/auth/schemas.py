@@ -53,3 +53,12 @@ class LoginData(BaseModel):
 
 class EmailSchema(BaseModel):
     addresses: List[str]
+
+
+class PasswordResetRequestModel(BaseModel):
+    email: str
+
+
+class PasswordResetConfirmModel(BaseModel):
+    new_password: str
+    confirm_new_password: str

@@ -99,8 +99,8 @@ async def get_headers(
     return request_headers
 
 
-app.include_router(books_router, prefix=f'/api/{ver_sion}/books')
 app.include_router(auth_router, prefix=f'/api/{ver_sion}/auth')
+app.include_router(books_router, prefix=f'/api/{ver_sion}/books')
 
 # Run Project At Specified Port
 if __name__ == "__main__":
