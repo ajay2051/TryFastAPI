@@ -9,6 +9,7 @@ from starlette import status
 from app.auth import auth, get_create_user, schemas
 from app.auth.auth import blacklist_token, create_url_safe_token, decode_urlsafe_token
 from app.auth.dependencies import RoleChecker
+from app.auth.get_create_user import get_user_by_email, update_user
 from app.auth.schemas import EmailSchema, LoginData
 from app.db_connection import get_db
 from app.mail import send_email_async, mail
@@ -34,8 +35,21 @@ auth_router = APIRouter(
 
 @auth_router.post('/send_email/')
 async def send_email(email: EmailSchema, background_tasks: BackgroundTasks):
-    background_tasks.add_task(send_email_async, email.addresses, "Welcome to Nepal")
+    background_tasks.add_task(send_email_async, email.addresses, "Welcome to Nepal", body="")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Email sending has been scheduled"})
+
+
+@auth_router.get('/verify/{token}/')
+async def verify_user_account(token: str, db: Session = Depends(get_db)):
+    token_data = decode_urlsafe_token(token)
+    user_email = token_data.get("email", None)
+    if user_email:
+        user = await get_user_by_email(db, email=user_email)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        await update_user(db, user, {'is_verified': True})
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "User has been verified"})
+    return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"message": "Token not found"})
 
 
 @auth_router.post("/token/", response_model=schemas.Token)

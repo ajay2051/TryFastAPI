@@ -23,3 +23,11 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+async def update_user(db: Session, user: models.User, user_data: dict):
+    for key, value in user_data.items():
+        setattr(user, key, value)
+    await db.commit()
+    db.refresh(db)
+    return user
