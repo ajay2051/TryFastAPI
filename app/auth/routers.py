@@ -7,10 +7,10 @@ from sqlalchemy.orm import Session
 from starlette import status
 
 from app.auth import auth, get_create_user, schemas
-from app.auth.auth import blacklist_token, create_url_safe_token, decode_urlsafe_token
+from app.auth.auth import blacklist_token, create_url_safe_token, decode_urlsafe_token, get_password_hash
 from app.auth.dependencies import RoleChecker
 from app.auth.get_create_user import get_user_by_email, update_user
-from app.auth.schemas import EmailSchema, LoginData, PasswordResetRequestModel
+from app.auth.schemas import EmailSchema, LoginData, PasswordResetRequestModel, PasswordResetConfirmModel
 from app.db_connection import get_db
 from app.mail import send_email_async, mail
 from app.models import UserRole
@@ -185,3 +185,20 @@ async def password_reset(email_data: PasswordResetRequestModel):
     )
     await mail.send_message(message)
     return JSONResponse(content={"message": "Paasword Reset Link Sent, Check Mail"}, status_code=status.HTTP_200_OK)
+
+
+@auth_router.post('/password-reset-confirm/{token}/')
+async def reset_account_password(token: str, password: PasswordResetConfirmModel, db: Session = Depends(get_db)):
+    new_password = password.new_password
+    confirm_new_password = password.confirm_new_password
+    if new_password != confirm_new_password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password didn't match")
+    token_data = decode_urlsafe_token(token)
+    user_email = token_data.get("email", None)
+    if user_email:
+        user = await get_user_by_email(db, email=user_email)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        await update_user(db, user, {'hashed_password': get_password_hash(new_password)})
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Password updated successfully"})
+    return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"message": "An error occurred while password reset"})
