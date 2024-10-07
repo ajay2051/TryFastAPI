@@ -98,9 +98,10 @@ async def refresh_access_token(refresh_token: str, db: Session = Depends(get_db)
 @auth_router.post("/create_users/",
                   # response_model=schemas.User # commented because response format is changed to custom dict
                   )
-async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def create_user(user: schemas.UserCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """
     Create Users with any roles.
+    :param background_tasks: send verification email
     :param user:
     :param db:
     :return: user
@@ -121,7 +122,8 @@ async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         subject="Verify Account",
         body=html_message,
     )
-    await mail.send_message(message)
+    background_tasks.add_task(mail.send_message, message)
+    # await mail.send_message(message)
     return {
         "message": "Account Created! Check Email",
         "user": new_user
