@@ -11,6 +11,7 @@ from app.auth.auth import blacklist_token, create_url_safe_token, decode_urlsafe
 from app.auth.dependencies import RoleChecker
 from app.auth.get_create_user import get_user_by_email, update_user
 from app.auth.schemas import EmailSchema, LoginData, PasswordResetRequestModel, PasswordResetConfirmModel
+from app.celery_tasks import send_email_celery
 from app.db_connection import get_db
 from app.mail import send_email_async, mail
 from app.models import UserRole
@@ -35,8 +36,10 @@ auth_router = APIRouter(
 
 @auth_router.post('/send_email/')
 async def send_email(email: EmailSchema, background_tasks: BackgroundTasks):
-    background_tasks.add_task(send_email_async, email.addresses, "Welcome to Nepal", body="")
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Email sending has been scheduled"})
+    subject = "Welcome To Our App"
+    # background_tasks.add_task(send_email_async, email.addresses, "Welcome to Nepal", body="")
+    send_email_celery.delay(addresses = email.addresses, subject = subject, body = "")
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Email has been sent"})
 
 
 @auth_router.get('/verify/{token}/')
@@ -117,12 +120,13 @@ async def create_user(user: schemas.UserCreate, background_tasks: BackgroundTask
     <h1>Verify your Email</h1>
     <p>Please click this <a href="{link}">link</a> to verify your email</p>
     """
-    message = send_email_async(
-        addresses=[user.email],
-        subject="Verify Account",
-        body=html_message,
-    )
-    background_tasks.add_task(mail.send_message, message)
+    await send_email(addresses=[user.email], subject="Verify Account", body=html_message)
+    # message = send_email_async(
+    #     addresses=[user.email],
+    #     subject="Verify Account",
+    #     body=html_message,
+    # )
+    # background_tasks.add_task(mail.send_message, message)
     # await mail.send_message(message)
     return {
         "message": "Account Created! Check Email",
