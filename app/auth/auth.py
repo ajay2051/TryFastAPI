@@ -5,10 +5,10 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from itsdangerous import URLSafeTimedSerializer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
-from itsdangerous import URLSafeTimedSerializer
 
 from app import models
 from app.auth import schemas

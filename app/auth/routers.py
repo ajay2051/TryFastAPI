@@ -10,10 +10,10 @@ from app.auth import auth, get_create_user, schemas
 from app.auth.auth import blacklist_token, create_url_safe_token, decode_urlsafe_token, get_password_hash
 from app.auth.dependencies import RoleChecker
 from app.auth.get_create_user import get_user_by_email, update_user
-from app.auth.schemas import EmailSchema, LoginData, PasswordResetRequestModel, PasswordResetConfirmModel
+from app.auth.schemas import EmailSchema, LoginData, PasswordResetConfirmModel, PasswordResetRequestModel
 from app.celery_tasks import send_email_celery
 from app.db_connection import get_db
-from app.mail import send_email_async, mail
+from app.mail import mail, send_email_async
 from app.models import UserRole
 
 auth_router = APIRouter(
