@@ -31,9 +31,15 @@ ver_sion = 'v1'
 
 app = FastAPI(
     title='Books API',
-    description='Books API',
+    description='A REST API for Book Service',
     version=ver_sion,
     lifespan=lifespan,
+    docs_url=f'/api/{ver_sion}/docs/',
+    redoc_url=f'/api/{ver_sion}/redoc/',
+    contact={
+        'name': 'Ajay Thakur',
+        'email': 'ajaythk.94@gmail.com',
+    }
 )
 
 origins = [
