@@ -37,9 +37,9 @@ mail = FastMail(config=mail_config)
 #         subtype=MessageType.html)
 #     return message
 
-    # fm = FastMail(mail_config)
-    # await fm.send_message(message)
-    # return JSONResponse(status_code=200, content={"message": "email has been sent"})
+# fm = FastMail(mail_config)
+# await fm.send_message(message)
+# return JSONResponse(status_code=200, content={"message": "email has been sent"})
 
 async def send_email_async(addresses: List[str], subject: str, body: str):
     message = MessageSchema(

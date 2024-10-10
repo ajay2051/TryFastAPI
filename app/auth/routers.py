@@ -38,7 +38,7 @@ auth_router = APIRouter(
 async def send_email(email: EmailSchema, background_tasks: BackgroundTasks):
     subject = "Welcome To Our App"
     # background_tasks.add_task(send_email_async, email.addresses, "Welcome to Nepal", body="")
-    send_email_celery.delay(addresses = email.addresses, subject = subject, body = "")
+    send_email_celery.delay(addresses=email.addresses, subject=subject, body="")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Email has been sent"})
 
 

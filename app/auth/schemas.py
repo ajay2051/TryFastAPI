@@ -1,7 +1,6 @@
 from typing import List
 
 from pydantic import BaseModel
-from pydantic_core.core_schema import ListSchema
 
 from app.models import UserRole
 
